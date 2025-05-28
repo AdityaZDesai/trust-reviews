@@ -32,25 +32,33 @@ const LoginForm = () => {
       console.log('Redirecting to dashboard...');
       toast.success('Login successful!');
       router.push('/dashboard');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Login error:', error);
       
+      // Define a type guard for Firebase auth errors
+      const isFirebaseError = (err: unknown): err is { code: string; message: string } => {
+        return typeof err === 'object' && err !== null && 'code' in err && 'message' in err;
+      };
+      
       // Handle specific Firebase auth errors
-      const errorCode = error.code;
       let errorMsg = 'Failed to login';
       
-      if (errorCode === 'auth/wrong-password' || errorCode === 'auth/invalid-credential') {
-        errorMsg = 'Incorrect password. Please try again.';
-      } else if (errorCode === 'auth/user-not-found') {
-        errorMsg = 'No account found with this email address.';
-      } else if (errorCode === 'auth/invalid-email') {
-        errorMsg = 'Invalid email format.';
-      } else if (errorCode === 'auth/too-many-requests') {
-        errorMsg = 'Too many failed login attempts. Please try again later.';
-      } else if (errorCode === 'auth/network-request-failed') {
-        errorMsg = 'Network error. Please check your connection.';
-      } else if (error.message) {
-        errorMsg = error.message;
+      if (isFirebaseError(error)) {
+        const errorCode = error.code;
+        
+        if (errorCode === 'auth/wrong-password' || errorCode === 'auth/invalid-credential') {
+          errorMsg = 'Incorrect password. Please try again.';
+        } else if (errorCode === 'auth/user-not-found') {
+          errorMsg = 'No account found with this email address.';
+        } else if (errorCode === 'auth/invalid-email') {
+          errorMsg = 'Invalid email format.';
+        } else if (errorCode === 'auth/too-many-requests') {
+          errorMsg = 'Too many failed login attempts. Please try again later.';
+        } else if (errorCode === 'auth/network-request-failed') {
+          errorMsg = 'Network error. Please check your connection.';
+        } else if (error.message) {
+          errorMsg = error.message;
+        }
       }
       
       setErrorMessage(errorMsg);

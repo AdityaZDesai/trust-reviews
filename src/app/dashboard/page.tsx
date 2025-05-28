@@ -15,7 +15,17 @@ interface DashboardData {
   totalCommission: number;
   todayCount: number;
   sourceCounts: { source: string; count: number }[];
-  listings: any[];
+  listings: {
+    id?: string;
+    source?: string;
+    summary?: string;
+    text?: string;
+    description?: string;
+    timestamp?: string | number;
+    status?: 'active' | 'awaiting' | 'deleted';
+    url?: string;
+    link?: string;
+  }[];
   deletedReviewsCount: number;
 }
 
@@ -50,9 +60,9 @@ export default function DashboardPage() {
         }
         const json = await res.json();
         setData(json);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error(err);
-        setError(err.message || 'Unknown error');
+        setError((err instanceof Error) ? err.message : 'Unknown error');
       } finally {
         setLoading(false);
       }
@@ -218,7 +228,7 @@ export default function DashboardPage() {
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id as any)}
+                  onClick={() => setActiveTab(tab.id as 'dashboard' | 'posts')}
                   className={`
                     flex items-center gap-2 px-4 py-2
                     text-base font-semibold transition-all duration-200

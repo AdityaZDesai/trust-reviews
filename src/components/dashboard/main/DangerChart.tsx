@@ -61,7 +61,7 @@ const DangerChart = ({ data }: DangerChartProps) => {
               stroke="#f3f4f6"
               strokeWidth={18}
             />
-            {segments.map((seg, i) => (
+            {segments.map((seg) => (
               <circle
                 key={seg.platform}
                 cx="75"
