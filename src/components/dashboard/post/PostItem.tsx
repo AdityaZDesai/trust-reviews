@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { getPlatformLogo } from '@/components/dashboard/main/platformLogo';
 import { Eye, Trash2, Calendar } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Post } from '@/lib/models';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -12,16 +13,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-
-interface Post {
-  id: string;
-  platform: string;
-  platformIcon: string;
-  content: string;
-  date: string;
-  status: 'active' | 'awaiting';
-  url?: string; // Optional URL field
-}
 
 const platformColors: Record<string, string> = {
   Google: '#EA4335',
