@@ -135,7 +135,7 @@ export default function DashboardPage() {
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id as any)}
+                  onClick={() => setActiveTab(tab.id as "dashboard" | "posts")}
                   className={`
                     flex items-center gap-2 px-4 sm:px-8 py-2 sm:py-3
                     text-base sm:text-lg font-semibold transition-all duration-200

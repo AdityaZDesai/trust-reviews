@@ -31,7 +31,7 @@ export const RevenueChart = ({ data }: RevenueChartProps) => {
             ))}
           </div>
           <div className="absolute left-0 right-0 top-0 bottom-0 flex flex-col justify-between z-10">
-            {data.map((item, idx) => (
+            {data.map((item) => (
               <div key={item.platform} className="flex items-center h-10">
                 {/* Platform label */}
                 <div className="w-32 text-right pr-4 text-gray-500 text-lg font-medium">
@@ -56,7 +56,7 @@ export const RevenueChart = ({ data }: RevenueChartProps) => {
           </div>
           {/* Vertical axis grid lines and labels */}
           <div className="absolute left-32 right-0 top-0 bottom-0 z-0 flex">
-            {AXIS_STEPS.map((step, idx) => (
+            {AXIS_STEPS.map((step) => (
               <div key={step} className="relative flex-1 h-full">
                 <div className="absolute left-0 top-0 bottom-0 border-l border-gray-200" style={{ zIndex: 0 }} />
                 <div className="absolute left-0 bottom-[-1.5rem] text-gray-400 text-base font-medium" style={{ zIndex: 1 }}>
