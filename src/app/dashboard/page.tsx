@@ -1,43 +1,72 @@
-"use client"
+// app/dashboard/page.tsx
+"use client";
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/use-auth';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ChevronDown, LayoutGrid, ListOrdered } from 'lucide-react';
 import DashboardOverview from '@/components/dashboard/main/DashboardOverview';
 import PostsListing from '@/components/dashboard/post/PostsListing';
 import TrustReviewsLogo from '@/components/misc/TrustReviewsLogo';
-import { useAuth } from '@/hooks/use-auth';
-import { useRouter } from 'next/navigation';
+
+interface DashboardData {
+  commissionBySource: { source: string; commission: number }[];
+  totalCommission: number;
+  todayCount: number;
+  sourceCounts: { source: string; count: number }[];
+  listings: any[];
+  deletedReviewsCount: number;
+}
 
 export default function DashboardPage() {
-  const [activeTab, setActiveTab] = useState('dashboard');
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 0);
   const { user, logout } = useAuth();
   const router = useRouter();
 
-  // Handle window resize for responsive design
+  // UI state
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'posts'>('dashboard');
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [windowWidth, setWindowWidth] = useState(
+    typeof window !== 'undefined' ? window.innerWidth : 0
+  );
+
+  // Data state
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch dashboard + listings
   useEffect(() => {
-    const handleResize = () => {
-      setWindowWidth(window.innerWidth);
+    if (!user?.email) return;
+
+    const fetchData = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await fetch(`/api/dashboard?email=${encodeURIComponent(user.email ?? '')}`);
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          throw new Error(body.error || res.statusText);
+        }
+        const json = await res.json();
+        setData(json);
+      } catch (err: any) {
+        console.error(err);
+        setError(err.message || 'Unknown error');
+      } finally {
+        setLoading(false);
+      }
     };
 
+    fetchData();
+  }, [user?.email]);
+
+  // Window resize for responsive labels
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
-
-  const handleLogout = async () => {
-    try {
-      await logout();
-      router.push('/');
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
-  };
-
-  const toggleDropdown = () => {
-    setDropdownOpen(!dropdownOpen);
-  };
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -47,45 +76,80 @@ export default function DashboardPage() {
         setDropdownOpen(false);
       }
     };
-
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [dropdownOpen]);
 
+  const toggleDropdown = () => setDropdownOpen(!dropdownOpen);
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      router.push('/');
+    } catch (err) {
+      console.error('Logout error:', err);
+    }
+  };
+
+  const showLabels = windowWidth > 640;
   const tabs = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutGrid },
-    { id: 'posts', label: 'Listings', icon: ListOrdered }
+    { id: 'posts',     label: 'Listings',  icon: ListOrdered }
   ];
 
-  // Determine if we should show labels based on screen width
-  const showLabels = windowWidth > 640; // sm breakpoint
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        Loading…
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-red-500">
+        Error: {error}
+      </div>
+    );
+  }
+
+  if (!data) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-seasalt px-4 sm:px-8 md:px-16 lg:px-24 py-6 sm:py-8 md:py-10 lg:py-12">
       <header className="px-0 sm:px-4 py-4">
-        {/* Desktop: all in a row */}
+        {/* Desktop Header */}
         <div className="hidden sm:flex flex-row items-center justify-between w-full">
           <div className="flex items-center">
             <TrustReviewsLogo />
           </div>
-          <div className="flex flex-row justify-center rounded-full overflow-x-auto bg-transparent scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent mx-8" style={{ background: 'none', WebkitOverflowScrolling: 'touch' }}>
+          <div
+            className="flex flex-row justify-center rounded-full overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent mx-8"
+            style={{ background: 'none', WebkitOverflowScrolling: 'touch' }}
+          >
             {tabs.map((tab, idx) => {
               const isActive = activeTab === tab.id;
               const Icon = tab.icon;
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={() => setActiveTab(tab.id as any)}
                   className={`
-                    flex items-center gap-2 px-4 sm:px-8 py-2 sm:py-3 
-                    text-base sm:text-lg font-semibold transition-all duration-200 
+                    flex items-center gap-2 px-4 sm:px-8 py-2 sm:py-3
+                    text-base sm:text-lg font-semibold transition-all duration-200
                     focus:outline-none whitespace-nowrap
                     ${isActive ? 'bg-dark-slate-gray text-white' : 'bg-sgbus-green text-eerie-black hover:bg-sgbus-green/90'}
                     ${idx === 0 ? 'rounded-l-full' : 'rounded-r-full'}
                   `}
                   style={{ border: 'none' }}
                 >
-                  <Icon className={isActive ? 'text-sgbus-green' : 'text-eerie-black'} size={20} strokeWidth={2.2} />
+                  <Icon
+                    size={20}
+                    strokeWidth={2.2}
+                    className={isActive ? 'text-sgbus-green' : 'text-eerie-black'}
+                  />
                   {showLabels && <span>{tab.label}</span>}
                 </button>
               );
@@ -99,8 +163,8 @@ export default function DashboardPage() {
               </AvatarFallback>
             </Avatar>
             <div className="relative dropdown-container">
-              <ChevronDown 
-                className="h-4 w-4 text-gray-500 cursor-pointer" 
+              <ChevronDown
+                className="h-4 w-4 text-gray-500 cursor-pointer"
                 onClick={toggleDropdown}
               />
               {dropdownOpen && (
@@ -116,20 +180,20 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
-        
-        {/* Mobile: logo & avatar row, nav tabs below */}
+
+        {/* Mobile Header */}
         <div className="flex flex-col sm:hidden w-full">
           <div className="flex flex-row w-full items-center justify-between">
-            <div className="flex justify-start">
-              <TrustReviewsLogo />
-            </div>
+            <TrustReviewsLogo />
             <div className="flex items-center space-x-2 dropdown-container">
               <Avatar className="h-9 w-9">
                 <AvatarImage src="/placeholder.svg" alt="User" />
-                <AvatarFallback className="bg-amber-500 text-white">U</AvatarFallback>
+                <AvatarFallback className="bg-amber-500 text-white">
+                  U
+                </AvatarFallback>
               </Avatar>
-              <ChevronDown 
-                className="h-4 w-4 text-gray-500 cursor-pointer" 
+              <ChevronDown
+                className="h-4 w-4 text-gray-500 cursor-pointer"
                 onClick={toggleDropdown}
               />
               {dropdownOpen && (
@@ -144,24 +208,31 @@ export default function DashboardPage() {
               )}
             </div>
           </div>
-          <div className="flex flex-row w-full justify-center mt-4 rounded-full overflow-x-auto bg-transparent scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent" style={{ background: 'none', WebkitOverflowScrolling: 'touch' }}>
+          <div
+            className="flex flex-row w-full justify-center mt-4 rounded-full overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent"
+            style={{ background: 'none', WebkitOverflowScrolling: 'touch' }}
+          >
             {tabs.map((tab, idx) => {
               const isActive = activeTab === tab.id;
               const Icon = tab.icon;
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={() => setActiveTab(tab.id as any)}
                   className={`
-                    flex items-center gap-2 px-4 py-2 
-                    text-base font-semibold transition-all duration-200 
+                    flex items-center gap-2 px-4 py-2
+                    text-base font-semibold transition-all duration-200
                     focus:outline-none whitespace-nowrap
                     ${isActive ? 'bg-dark-slate-gray text-white' : 'bg-sgbus-green text-eerie-black hover:bg-sgbus-green/90'}
                     ${idx === 0 ? 'rounded-l-full' : 'rounded-r-full'}
                   `}
                   style={{ border: 'none' }}
                 >
-                  <Icon className={isActive ? 'text-sgbus-green' : 'text-eerie-black'} size={20} strokeWidth={2.2} />
+                  <Icon
+                    size={20}
+                    strokeWidth={2.2}
+                    className={isActive ? 'text-sgbus-green' : 'text-eerie-black'}
+                  />
                   <span>{tab.label}</span>
                 </button>
               );
@@ -170,8 +241,10 @@ export default function DashboardPage() {
         </div>
       </header>
 
+
+      
       <div className="px-0 sm:px-6 py-6 sm:py-8">
-        {activeTab === 'dashboard' && <DashboardOverview />}
+        {activeTab === 'dashboard' && <DashboardOverview onNavigateToListings={() => setActiveTab('posts')} />}
         {activeTab === 'posts' && <PostsListing />}
       </div>
     </div>

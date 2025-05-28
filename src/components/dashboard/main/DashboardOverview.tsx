@@ -4,8 +4,25 @@ import DangerChart from './DangerChart';
 import RevenueChart from './RevenueChart';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
 
-export const DashboardOverview = () => {
-  const dashboardData = useDashboardData();
+interface DashboardOverviewProps {
+  onNavigateToListings?: () => void;
+}
+
+export const DashboardOverview = ({ onNavigateToListings }: DashboardOverviewProps) => {
+  const { data, loading, error } = useDashboardData();
+  
+  if (loading) {
+    return <div className="p-8 text-center">Loading dashboard data...</div>;
+  }
+  
+  if (error) {
+    return <div className="p-8 text-center text-red-500">Error: {error}</div>;
+  }
+  
+  if (!data) {
+    return <div className="p-8 text-center">No dashboard data available</div>;
+  }
+  
   return (
     <div className="space-y-8">
       {/* Welcome Message */}
@@ -18,40 +35,43 @@ export const DashboardOverview = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <MetricCard
           title="Revenue Loss"
-          value={dashboardData.revenueLoss.value}
-          description={dashboardData.revenueLoss.description}
-          trend={dashboardData.revenueLoss.trend}
-          trendLabel={dashboardData.revenueLoss.trendLabel}
+          value={data.revenueLoss.value}
+          description={data.revenueLoss.description}
+          trend={data.revenueLoss.trend}
+          trendLabel={data.revenueLoss.trendLabel}
           type="negative"
           icon="📉"
+          onClick={onNavigateToListings}
         />
         <MetricCard
           title="Critical Alerts"
-          value={dashboardData.criticalAlerts.value}
-          description={dashboardData.criticalAlerts.description}
-          trend={dashboardData.criticalAlerts.trend}
-          trendLabel={dashboardData.criticalAlerts.trendLabel}
+          value={data.criticalAlerts.value}
+          description={data.criticalAlerts.description}
+          trend={data.criticalAlerts.trend}
+          trendLabel={data.criticalAlerts.trendLabel}
           type="warning"
           icon="⚠️"
+          onClick={onNavigateToListings}
         />
         <MetricCard
           title="Posts Taken Down"
-          value={dashboardData.postsTakenDown.value}
-          description={dashboardData.postsTakenDown.description}
-          trend={dashboardData.postsTakenDown.trend}
-          trendLabel={dashboardData.postsTakenDown.trendLabel}
+          value={data.postsTakenDown.value}
+          description={data.postsTakenDown.description}
+          trend={data.postsTakenDown.trend}
+          trendLabel={data.postsTakenDown.trendLabel}
           type="positive"
           icon="🛡️"
+          onClick={onNavigateToListings}
         />
       </div>
 
       {/* Charts Section: 1-2 grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-2">
         <div className="col-span-1">
-          <DangerChart data={dashboardData.dangerBySource} />
+          <DangerChart data={data.dangerBySource} />
         </div>
         <div className="col-span-1 lg:col-span-2">
-          <RevenueChart data={dashboardData.revenueLossBreakdown} />
+          <RevenueChart data={data.revenueLossBreakdown} />
         </div>
       </div>
     </div>

@@ -36,7 +36,9 @@ export interface Post {
   platformIcon: string;
   content: string;
   date: string;
-  status: 'active' | 'pending';
+  status: 'active' | 'awaiting' | 'deleted';
+  url?: string;
+  timestamp?: number; // Added for sorting by date
 }
 
 // Illustration elements model
@@ -48,4 +50,4 @@ export interface DecorativeElement {
 export interface IllustrationElements {
   personDescription: string;
   decorativeElements: DecorativeElement[];
-} 
+}
