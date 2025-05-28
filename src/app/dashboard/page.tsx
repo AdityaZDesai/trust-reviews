@@ -15,7 +15,17 @@ interface DashboardData {
   totalCommission: number;
   todayCount: number;
   sourceCounts: { source: string; count: number }[];
-  listings: any[];
+  listings: {
+    id?: string;
+    source?: string;
+    summary?: string;
+    text?: string;
+    description?: string;
+    timestamp?: string | number;
+    status?: 'active' | 'awaiting' | 'deleted';
+    url?: string;
+    link?: string;
+  }[];
   deletedReviewsCount: number;
 }
 
@@ -50,9 +60,9 @@ export default function DashboardPage() {
         }
         const json = await res.json();
         setData(json);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error(err);
-        setError(err.message || 'Unknown error');
+        setError(err instanceof Error ? err.message : 'Unknown error');
       } finally {
         setLoading(false);
       }
@@ -117,6 +127,31 @@ export default function DashboardPage() {
     return null;
   }
 
+  // Fix for the type error in the onClick handler
+  const handleTabClick = (tabId: 'dashboard' | 'posts') => {
+    setActiveTab(tabId);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        Loading…
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-red-500">
+        Error: {error}
+      </div>
+    );
+  }
+
+  if (!data) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen bg-seasalt px-4 sm:px-8 md:px-16 lg:px-24 py-6 sm:py-8 md:py-10 lg:py-12">
       <header className="px-0 sm:px-4 py-4">
@@ -135,7 +170,7 @@ export default function DashboardPage() {
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id as any)}
+                  onClick={() => handleTabClick(tab.id as 'dashboard' | 'posts')}
                   className={`
                     flex items-center gap-2 px-4 sm:px-8 py-2 sm:py-3
                     text-base sm:text-lg font-semibold transition-all duration-200

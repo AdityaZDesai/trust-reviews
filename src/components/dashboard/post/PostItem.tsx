@@ -3,10 +3,11 @@ import { Button } from '@/components/ui/button';
 import { getPlatformLogo } from '@/components/dashboard/main/platformLogo';
 import { Eye, Trash2, Calendar } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
+// Remove the unused import
 import {
   AlertDialog,
   AlertDialogAction,
-  AlertDialogCancel,
+  // Remove AlertDialogCancel from here
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,

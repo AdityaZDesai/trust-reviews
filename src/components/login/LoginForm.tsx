@@ -32,11 +32,11 @@ const LoginForm = () => {
       console.log('Redirecting to dashboard...');
       toast.success('Login successful!');
       router.push('/dashboard');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Login error:', error);
       
       // Handle specific Firebase auth errors
-      const errorCode = error.code;
+      const errorCode = (error as { code?: string }).code;
       let errorMsg = 'Failed to login';
       
       if (errorCode === 'auth/wrong-password' || errorCode === 'auth/invalid-credential') {
@@ -49,8 +49,8 @@ const LoginForm = () => {
         errorMsg = 'Too many failed login attempts. Please try again later.';
       } else if (errorCode === 'auth/network-request-failed') {
         errorMsg = 'Network error. Please check your connection.';
-      } else if (error.message) {
-        errorMsg = error.message;
+      } else if ((error as Error).message) {
+        errorMsg = (error as Error).message;
       }
       
       setErrorMessage(errorMsg);

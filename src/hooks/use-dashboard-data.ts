@@ -9,7 +9,17 @@ interface ApiDashboardData {
   totalCommission: number;
   todayCount: number;
   sourceCounts: { source: string; count: number }[];
-  listings: any[];
+  listings: {
+    id?: string;
+    source?: string;
+    summary?: string;
+    text?: string;
+    description?: string;
+    timestamp?: string | number;
+    status?: 'active' | 'awaiting' | 'deleted';
+    url?: string;
+    link?: string;
+  }[];
   deletedReviewsCount: number;
 }
 
@@ -58,12 +68,12 @@ export function useDashboardData() {
             trend: "+8%",
             trendLabel: "From yesterday"
           },
-          dangerBySource: json.sourceCounts.map(({ source, count }, index) => ({
+          dangerBySource: json.sourceCounts.map(({ source, count }) => ({
             platform: source.charAt(0).toUpperCase() + source.slice(1),
             percentage: Math.round((count / json.sourceCounts.reduce((sum, { count }) => sum + count, 0)) * 100),
             color: getColorForIndex(index)
           })),
-          revenueLossBreakdown: json.commissionBySource.map(({ source, commission }, index) => ({
+          revenueLossBreakdown: json.commissionBySource.map(({ source, commission }) => ({
             platform: source.charAt(0).toUpperCase() + source.slice(1),
             amount: Math.round(commission),
             color: "#F40B0B"
@@ -71,9 +81,9 @@ export function useDashboardData() {
         };
         
         setData(transformedData);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error(err);
-        setError(err.message || 'Failed to load dashboard data');
+        setError(err instanceof Error ? err.message : 'Failed to load dashboard data');
       } finally {
         setLoading(false);
       }
