@@ -23,6 +23,17 @@ interface ApiDashboardData {
   deletedReviewsCount: number;
 }
 
+// Define interfaces for the map callback parameters
+interface SourceCount {
+  source: string;
+  count: number;
+}
+
+interface CommissionBySource {
+  source: string;
+  commission: number;
+}
+
 export function useDashboardData() {
   const { user } = useAuth();
   const [data, setData] = useState<DashboardData | null>(null);
@@ -68,12 +79,12 @@ export function useDashboardData() {
             trend: "+8%",
             trendLabel: "From yesterday"
           },
-          dangerBySource: json.sourceCounts.map(({ source, count }, index) => ({
+          dangerBySource: json.sourceCounts.map(({ source, count }: SourceCount, index: number) => ({
             platform: source.charAt(0).toUpperCase() + source.slice(1),
-            percentage: Math.round((count / json.sourceCounts.reduce((sum, { count }) => sum + count, 0)) * 100),
+            percentage: Math.round((count / json.sourceCounts.reduce((sum: number, { count }: SourceCount) => sum + count, 0)) * 100),
             color: getColorForIndex(index)
           })),
-          revenueLossBreakdown: json.commissionBySource.map(({ source, commission }) => ({
+          revenueLossBreakdown: json.commissionBySource.map(({ source, commission }: CommissionBySource) => ({
             platform: source.charAt(0).toUpperCase() + source.slice(1),
             amount: Math.round(commission),
             color: "#F40B0B"

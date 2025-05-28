@@ -14,9 +14,9 @@ export function usePostsData(): Post[] {
         id: listing.id || String(Math.random()),
         platform: (listing.source || 'Misc').charAt(0).toUpperCase() + (listing.source || 'Misc').slice(1),
         platformIcon: getPlatformIcon(listing.source),
-        content: listing.content || listing.text || listing.description || 'No content available',
+        content: listing.text || listing.summary || listing.description || 'No content available',
         date: new Date(listing.timestamp || Date.now()).toLocaleDateString(),
-        status: 'active'
+        status: listing.status || 'active'
       }));
       
       setPosts(transformedPosts);
