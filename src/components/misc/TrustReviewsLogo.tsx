@@ -9,6 +9,7 @@ const TrustReviewsLogo: React.FC = () => (
       width={150} 
       height={40} 
       className="object-contain"
+      priority={true} // Add this to prioritize loading
     />
   </div>
 );

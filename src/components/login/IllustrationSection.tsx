@@ -6,12 +6,12 @@ export const IllustrationSection = () => {
     <div className="relative w-full h-full bg-gradient-to-br from-seasalt to-seasalt/80 overflow-hidden flex items-center justify-center">
       <div className="relative w-full h-full">
         <Image
-          src="/illustration/illustration.png"
+          src="/illustration.png"
           alt="Login Illustration"
           width={800}
           height={600}
           className="w-full h-full object-contain"
-          unoptimized={true}
+          priority={true} // Replace unoptimized with priority
         />
       </div>
     </div>

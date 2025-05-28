@@ -1,7 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  images: {
+    loader: 'default',
+    domains: ['vercel.app'],
+  },
 };
 
 export default nextConfig;
