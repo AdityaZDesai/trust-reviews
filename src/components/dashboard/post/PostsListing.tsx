@@ -97,15 +97,23 @@ export const PostsListing = () => {
   }, [platformFilter, statusFilter, sortOrder, posts]);
 
   const handleSelectPost = (postId: string) => {
-    setSelectedPosts(prev => 
-      prev.includes(postId) 
-        ? prev.filter(id => id !== postId)
-        : [...prev, postId]
-    );
+    // Find the post to check its status
+    const post = posts.find(p => p.id === postId);
+    
+    // Only allow selection if the post is active
+    if (post && post.status === 'active') {
+      setSelectedPosts(prev => 
+        prev.includes(postId) 
+          ? prev.filter(id => id !== postId)
+          : [...prev, postId]
+      );
+    }
   };
 
   const handleSelectAll = () => {
-    setSelectedPosts(filteredPosts.map(post => post.id));
+    // Only select posts with 'active' status
+    const activePosts = filteredPosts.filter(post => post.status === 'active');
+    setSelectedPosts(activePosts.map(post => post.id));
   };
 
   const handleDeselectAll = () => {
@@ -113,10 +121,13 @@ export const PostsListing = () => {
   };
   
   // Handle bulk request deletion
-  const handleBulkRequestDeletion = async () => {
+  const handleBulkRequestDeletion = () => {
     if (selectedPosts.length === 0) return;
     
+    // Only show the dialog, don't make API calls here
     setShowBulkDeleteDialog(true);
+    setBulkDeleteSuccess(false);
+    setBulkDeleteError(false);
   };
   
   const confirmBulkDeletion = async () => {
@@ -308,9 +319,9 @@ export const PostsListing = () => {
             </AlertDialogTitle>
             <AlertDialogDescription>
               {!bulkDeleteSuccess && !bulkDeleteError 
-                ? `Are you sure you want to request deletion for ${selectedPosts.length} posts?` 
+                ? `Are you sure you want to request deletion for ${selectedPosts.length} posts? The reviews will be sent to our Team to be reviewed. Our Team will contact you within the next 1-2 days with a quotation for removal.` 
                 : bulkDeleteSuccess 
-                  ? `Your request to delete ${selectedPosts.length} posts has been submitted successfully.` 
+                  ? `Your request to delete ${selectedPosts.length} posts has been submitted successfully. The reviews have been sent to our Team to be reviewed. Our Team will contact you within the next 1-2 days with a quotation for removal.` 
                   : "There was an error processing your deletion requests. Please try again later."}
             </AlertDialogDescription>
           </AlertDialogHeader>

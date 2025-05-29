@@ -8,13 +8,11 @@ export default function Home() {
       {/* Left side - Illustration */}
       <div className="hidden lg:flex lg:w-1/2 xl:w-3/5 bg-gradient-to-br from-seasalt to-seasalt/80 relative overflow-hidden">
         <div className="absolute inset-0 flex items-center justify-center">
-          <Image
-            src="/illustration.png"
-            alt="Login Illustration"
-            width={800}
-            height={600}
-            className="w-full h-full object-contain"
-          />
+        <img
+          src="/illustration/illustration.png"
+          alt="Login Illustration"
+          className="w-full h-full object-contain"
+        />
         </div>
       </div>
       {/* Right side - Login Form */}

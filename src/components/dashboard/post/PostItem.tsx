@@ -65,54 +65,18 @@ export const PostItem = ({ post, flat, isSelected = false, onSelect, onStatusUpd
   
   // Handle checkbox click
   const handleCheckboxChange = () => {
-    if (onSelect) {
+    if (onSelect && post.status === 'active') {
       onSelect(post.id);
     }
   };
   
   // Handle request deletion button click
-  const handleRequestDeletion = async () => {
-    if (post.status === 'awaiting') {
-      setShowDeleteDialog(true);
-      setDeleteSuccess(false);
-      return;
-    }
+  const handleRequestDeletion = () => {
+    // Only show the dialog, don't make API calls here
+    setShowDeleteDialog(true);
     
-    try {
-      setIsUpdating(true);
-      
-      const response = await fetch('/api/listings/update-status', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          id: post.id,
-          status: 'awaiting'
-        }),
-      });
-      
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to update status');
-      }
-      
-      // Call the onStatusUpdate callback if provided
-      if (onStatusUpdate) {
-        onStatusUpdate(post.id, 'awaiting');
-      }
-      
-      // Show success dialog
-      setDeleteSuccess(true);
-      setShowDeleteDialog(true);
-    } catch (error) {
-      console.error('Error updating post status:', error);
-      // Show error dialog
+    if (post.status === 'awaiting') {
       setDeleteSuccess(false);
-      setShowDeleteDialog(true);
-    } finally {
-      setIsUpdating(false);
     }
   };
   
@@ -127,6 +91,7 @@ export const PostItem = ({ post, flat, isSelected = false, onSelect, onStatusUpd
             onCheckedChange={handleCheckboxChange}
             className="mr-2"
             id={`select-post-${post.id}`}
+            disabled={post.status !== 'active'} // Disable checkbox if post is not active
           />
         </div>
         {/* Green dot */}
@@ -182,20 +147,63 @@ export const PostItem = ({ post, flat, isSelected = false, onSelect, onStatusUpd
                 ? "Deletion Request Submitted" 
                 : post.status === 'awaiting' 
                   ? "Already Awaiting Deletion" 
-                  : "Error Requesting Deletion"}
+                  : "Confirm Deletion Request"}
             </AlertDialogTitle>
             <AlertDialogDescription>
               {deleteSuccess 
-                ? "Your request to delete this post has been submitted successfully. The post status has been updated to 'Awaiting'." 
+                ? "Your request to delete this post has been submitted successfully. The reviews have been sent to our Team to be reviewed. Our Team will contact you within the next 1-2 days with a quotation for removal." 
                 : post.status === 'awaiting' 
                   ? "This post is already marked as awaiting deletion." 
-                  : "There was an error processing your deletion request. Please try again later."}
+                  : "Are you sure you want to request deletion for this post? The reviews will be sent to our Team to be reviewed. Our Team will contact you within the next 1-2 days with a quotation for removal."}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogAction onClick={() => setShowDeleteDialog(false)}>
-              {deleteSuccess ? "OK" : "Close"}
-            </AlertDialogAction>
+            {!deleteSuccess && post.status !== 'awaiting' ? (
+              <>
+                <AlertDialogAction onClick={() => setShowDeleteDialog(false)}>Cancel</AlertDialogAction>
+                <AlertDialogAction onClick={async () => {
+                  try {
+                    setIsUpdating(true);
+                    
+                    const response = await fetch('/api/listings/update-status', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify({
+                        id: post.id,
+                        status: 'awaiting'
+                      }),
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (!response.ok) {
+                      throw new Error(data.error || 'Failed to update status');
+                    }
+                    
+                    // Call the onStatusUpdate callback if provided
+                    if (onStatusUpdate) {
+                      onStatusUpdate(post.id, 'awaiting');
+                    }
+                    
+                    // Show success dialog
+                    setDeleteSuccess(true);
+                  } catch (error) {
+                    console.error('Error updating post status:', error);
+                    // Show error dialog
+                    setDeleteSuccess(false);
+                    setShowDeleteDialog(false);
+                  } finally {
+                    setIsUpdating(false);
+                  }
+                }}>Confirm</AlertDialogAction>
+              </>
+            ) : (
+              <AlertDialogAction onClick={() => setShowDeleteDialog(false)}>
+                {deleteSuccess ? "OK" : "Close"}
+              </AlertDialogAction>
+            )}
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
