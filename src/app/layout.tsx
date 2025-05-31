@@ -10,6 +10,10 @@ const montserrat = Montserrat({
 
 export const metadata: Metadata = {
   title: "Trust Reviews",
+  icons: {
+    icon: "/brandlogo/brandlogo.png",
+    apple: "/brandlogo/brandlogo.png",
+  },
 };
 
 export default function RootLayout({

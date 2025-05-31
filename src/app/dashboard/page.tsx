@@ -181,12 +181,12 @@ export default function DashboardPage() {
     <div className="h-screen overflow-hidden bg-seasalt px-4 sm:px-6 md:px-8 lg:px-12 py-4 sm:py-6 flex flex-col">
       <header className="px-0 sm:px-4 py-2 flex-shrink-0">
         {/* Desktop Header */}
-        <div className="hidden sm:flex flex-row items-center justify-between w-full">
-          <div className="flex items-center">
+        <div className="hidden sm:flex flex-row items-center w-full relative"> {/* Changed justify-between to relative positioning */}
+          <div className="flex items-center absolute left-0">
             <TrustReviewsLogo />
           </div>
           <div
-            className="flex flex-row justify-center rounded-full overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent mx-8"
+            className="flex flex-row justify-center rounded-full overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent mx-auto w-full" 
             style={{ background: 'none', WebkitOverflowScrolling: 'touch' }}
           >
             {tabs.map((tab, idx) => {
@@ -215,7 +215,7 @@ export default function DashboardPage() {
               );
             })}
           </div>
-          <div className="flex items-center space-x-2 dropdown-container">
+          <div className="flex items-center space-x-2 dropdown-container absolute right-0">
             {/* Add Slack Connect Button here */}
             <SlackConnectButton isConnected={slackConnected} />
             <Avatar className="h-10 w-10">
@@ -274,7 +274,7 @@ export default function DashboardPage() {
           </div>
           <div
             className="flex flex-row w-full justify-center mt-4 rounded-full overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent"
-            style={{ background: 'none', WebkitOverflowScrolling: 'touch' }}
+            style={{ background: 'none', WebkitOverflowScrolling: 'touch', margin: '0 auto' }}
           >
             {tabs.map((tab, idx) => {
               const isActive = activeTab === tab.id;
