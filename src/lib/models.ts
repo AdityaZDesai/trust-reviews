@@ -51,3 +51,24 @@ export interface IllustrationElements {
   personDescription: string;
   decorativeElements: DecorativeElement[];
 }
+
+
+// Add this to your existing models.ts file
+
+// User model with Slack integration
+export interface User {
+  id: string;
+  email: string;
+  // ... other existing user fields
+  slackConnected?: boolean;
+  slackTeamId?: string;
+  slackUserId?: string;
+}
+
+// Slack installation model
+export interface SlackInstallation {
+  teamId: string;
+  installation: any; // Slack installation data
+  userId: string; // Your app's user ID
+  updatedAt: Date;
+}

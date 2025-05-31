@@ -19,6 +19,7 @@ export const signUp = async (email: string, password: string) => {
 };
 
 // Sign in with email and password
+// In your signIn function
 export const signIn = async (email: string, password: string) => {
   try {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
@@ -32,7 +33,10 @@ export const signIn = async (email: string, password: string) => {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ token: idToken }),
+      body: JSON.stringify({ 
+        token: idToken,
+        email: email  // Add email to be stored in a separate cookie
+      }),
     });
     
     return userCredential.user;

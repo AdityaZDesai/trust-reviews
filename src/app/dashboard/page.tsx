@@ -9,6 +9,8 @@ import { ChevronDown, LayoutGrid, ListOrdered } from 'lucide-react';
 import DashboardOverview from '@/components/dashboard/main/DashboardOverview';
 import PostsListing from '@/components/dashboard/post/PostsListing';
 import TrustReviewsLogo from '@/components/misc/TrustReviewsLogo';
+// Add this import at the top of the file
+import SlackConnectButton from '@/components/slack/SlackConnectButton';
 
 interface DashboardData {
   commissionBySource: { source: string; commission: number }[];
@@ -33,17 +35,65 @@ export default function DashboardPage() {
   const { user, logout } = useAuth();
   const router = useRouter();
 
-  // UI state
+  // UI state - KEEP ALL HOOKS AT THE TOP LEVEL
   const [activeTab, setActiveTab] = useState<'dashboard' | 'posts'>('dashboard');
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [windowWidth, setWindowWidth] = useState(
     typeof window !== 'undefined' ? window.innerWidth : 0
   );
+  // Add the slackConnected state here with all other state hooks
+  const [slackConnected, setSlackConnected] = useState(false);
 
   // Data state
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Check for slackConnected in URL and update state
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('slackConnected') === 'true') {
+        setSlackConnected(true);
+      }
+    }
+  }, []);
+
+  // Fetch user data to check slackConnected status in database
+  useEffect(() => {
+    if (!user?.email) return;
+
+    const fetchUserData = async () => {
+      try {
+        const res = await fetch(`/api/user?email=${encodeURIComponent(user.email ?? '')}`);
+        if (res.ok) {
+          const userData = await res.json();
+          if (userData.slackConnected) {
+            setSlackConnected(true);
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching user data:', err);
+      }
+    };
+
+    fetchUserData();
+  }, [user?.email]);
+
+  // Update URL if slackConnected is true but not in URL
+  useEffect(() => {
+    if (typeof window !== 'undefined' && slackConnected) {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('slackConnect') !== 'True') {
+        // Preserve existing query parameters
+        urlParams.set('slackConnect', 'True');
+        
+        // Update URL without causing a navigation/reload
+        const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
+        window.history.replaceState({}, '', newUrl);
+      }
+    }
+  }, [slackConnected]);
 
   // Fetch dashboard + listings
   useEffect(() => {
@@ -89,7 +139,7 @@ export default function DashboardPage() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [dropdownOpen]);
-
+  
   const toggleDropdown = () => setDropdownOpen(!dropdownOpen);
 
   const handleLogout = async () => {
@@ -166,6 +216,8 @@ export default function DashboardPage() {
             })}
           </div>
           <div className="flex items-center space-x-2 dropdown-container">
+            {/* Add Slack Connect Button here */}
+            <SlackConnectButton isConnected={slackConnected} />
             <Avatar className="h-10 w-10">
               <AvatarImage src="/placeholder.svg" alt="User" />
               <AvatarFallback className="bg-amber-500 text-white">
@@ -196,6 +248,8 @@ export default function DashboardPage() {
           <div className="flex flex-row w-full items-center justify-between">
             <TrustReviewsLogo />
             <div className="flex items-center space-x-2 dropdown-container">
+              {/* Add Slack Connect Button here for mobile */}
+              <SlackConnectButton isConnected={slackConnected} />
               <Avatar className="h-9 w-9">
                 <AvatarImage src="/placeholder.svg" alt="User" />
                 <AvatarFallback className="bg-amber-500 text-white">
