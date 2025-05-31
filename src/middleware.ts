@@ -5,7 +5,16 @@ import type { NextRequest } from 'next/server';
 export function middleware(request: NextRequest) {
   const session = request.cookies.get('session');
   const pathname = request.nextUrl.pathname;
-
+    // Allow access to public assets and images
+  if (
+    pathname.includes("/illustration/") ||
+    pathname.includes("/brandlogo/") ||
+    pathname.includes("/source_logos/") ||
+    pathname.startsWith("/_next/") ||
+    pathname === "/favicon.ico"
+  ) {
+    return NextResponse.next();
+  }
   // If there's no session and the user is trying to access a protected route
   if (!session && pathname !== '/' && !pathname.includes('/_next')) {
     const url = new URL('/', request.url);

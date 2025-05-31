@@ -5,9 +5,9 @@ import { WebClient } from '@slack/web-api';
 
 export async function POST(req: NextRequest) {
   try {
-    const { id, status, bulkOperation = false } = await req.json();
+    const { ids, status } = await req.json();
     
-    if (!id || !status) {
+    if (!ids || !Array.isArray(ids) || ids.length === 0 || !status) {
       return NextResponse.json({ error: 'Missing required parameters' }, { status: 400 });
     }
     
@@ -20,26 +20,31 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'User not authenticated' }, { status: 401 });
     }
     
-    // Get the listing before updating to check if status is changing from active to awaiting/deleted
-    const listing = await db.collection('Scrapes').findOne({ _id: new ObjectId(id) });
-    const oldStatus = listing?.status || '';
+    // Convert string IDs to ObjectIds
+    const objectIds = ids.map(id => new ObjectId(id));
     
-    // Update the status of the listing
-    const result = await db.collection('Scrapes').updateOne(
-      { _id: new ObjectId(id) },
+    // Get the listings before updating to check their current status
+    const listings = await db.collection('Scrapes').find({ _id: { $in: objectIds } }).toArray();
+    
+    // Filter for listings that are currently active
+    const activeListings = listings.filter(listing => listing.status === 'active');
+    const activeListingIds = activeListings.map(listing => listing._id);
+    
+    if (activeListingIds.length === 0) {
+      return NextResponse.json({ 
+        success: true, 
+        message: 'No active listings to update' 
+      });
+    }
+    
+    // Update the status of all active listings
+    const result = await db.collection('Scrapes').updateMany(
+      { _id: { $in: activeListingIds } },
       { $set: { status } }
     );
     
-    if (result.matchedCount === 0) {
-      return NextResponse.json({ error: 'Listing not found' }, { status: 404 });
-    }
-    
-    // Only send Slack notification if this is not part of a bulk operation
-    // and status is changing from active to awaiting (deletion request)
-    if (!bulkOperation && oldStatus === 'active' && status === 'awaiting') {
-      // Get the listing details for the notification
-      const updatedListing = await db.collection('Scrapes').findOne({ _id: new ObjectId(id) });
-      
+    // Only send Slack notification if status is changing to 'awaiting' (deletion request)
+    if (status === 'awaiting') {
       // ─── Pull Slack bot token & channel ID from environment ────────────────
       const botToken = process.env.SLACK_BOT_TOKEN;
       const channelId = process.env.SLACK_CHANNEL_ID;
@@ -55,8 +60,20 @@ export async function POST(req: NextRequest) {
           // ─── Initialize Slack WebClient with bot token ──────────────────────────
           const slack = new WebClient(botToken);
           
+          // Get sources summary
+          const sourceCount = activeListings.reduce((acc, listing) => {
+            const source = listing.source || 'Unknown';
+            acc[source] = (acc[source] || 0) + 1;
+            return acc;
+          }, {} as Record<string, number>);
+          
+          // Format sources for message
+          const sourcesText = Object.entries(sourceCount)
+            .map(([source, count]) => `*${source}*: ${count}`)
+            .join('\n');
+          
           // ─── Prepare the message text ──────────────────────────────────────────
-          const text = `🚨 *Review Deletion Request* 🚨\n\nUser *${userEmail}* has requested to delete a review from *${updatedListing?.source || 'Unknown'}*.\n\nContent: ${updatedListing?.text || updatedListing?.summary || 'No content available'}`;
+          const text = `🚨 *Bulk Review Deletion Request* 🚨\n\nUser *${userEmail}* has requested to delete *${activeListings.length} reviews* from the following sources:\n\n${sourcesText}`;
           
           // ─── Send to the configured channel ────────────────────────────────────
           await slack.chat.postMessage({
@@ -72,11 +89,14 @@ export async function POST(req: NextRequest) {
       }
     }
     
-    return NextResponse.json({ success: true, message: `Status updated to ${status}` });
+    return NextResponse.json({ 
+      success: true, 
+      message: `Status updated to ${status} for ${result.modifiedCount} listings` 
+    });
   } catch (error) {
     console.error(error);
     return NextResponse.json(
-      { error: 'Failed to update listing status' },
+      { error: 'Failed to update listing statuses' },
       { status: 500 }
     );
   }

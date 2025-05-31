@@ -132,21 +132,21 @@ export const PostsListing = () => {
   
   const confirmBulkDeletion = async () => {
     try {
-      // Update each selected post's status to 'awaiting'
-      const updatePromises = selectedPosts.map(postId => 
-        fetch('/api/listings/update-status', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          }, 
-          body: JSON.stringify({
-            id: postId,
-            status: 'awaiting'
-          }),
-        })
-      );
+      // Use the new bulk update endpoint instead of individual updates
+      const response = await fetch('/api/listings/bulk-update-status', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ids: selectedPosts,
+          status: 'awaiting'
+        }),
+      });
       
-      await Promise.all(updatePromises);
+      if (!response.ok) {
+        throw new Error('Failed to update posts');
+      }
       
       // Update local state
       setPosts(prevPosts => 

@@ -90,7 +90,7 @@ export async function GET(request: NextRequest) {
   // 2) generate a Slack install URL, passing the email as metadata
   try {
     const url = await installer.generateInstallUrl({
-      scopes: ['chat:write', 'channels:read'],
+      scopes: ['chat:write', 'channels:read', 'groups:read', 'chat:write.customize'],
       redirectUri: `${process.env.NEXT_PUBLIC_BASE_URL}/api/slack/oauth/callback`,
       metadata: email,
     });
