@@ -68,7 +68,25 @@ export interface User {
 // Slack installation model
 export interface SlackInstallation {
   teamId: string;
-  installation: any; // Slack installation data
+  installation: {
+    team: {
+      id: string;
+      name: string;
+    };
+    bot?: {
+      token: string;
+      userId: string;
+      scopes: string[];
+    };
+    user?: {
+      token: string;
+      id: string;
+      scopes: string[];
+    };
+    tokenType: string;
+    enterpriseId?: string;
+    appId: string;
+  }; // Structured Slack installation data
   userId: string; // Your app's user ID
   updatedAt: Date;
 }
