@@ -24,15 +24,15 @@ export const DashboardOverview = ({ onNavigateToListings }: DashboardOverviewPro
   }
   
   return (
-    <div className="space-y-8">
+    <div className="space-y-4">
       {/* Welcome Message */}
-      <div className="mb-2">
-        <h1 className="text-lg text-eerie-black font-normal mb-1">Hey, User</h1>
-        <h2 className="text-3xl md:text-4xl font-bold text-sgbus-green mb-4">Your Risk Overview</h2>
+      <div className="mb-1">
+        <h1 className="text-lg text-eerie-black font-normal mb-0">Hey, User</h1>
+        <h2 className="text-2xl md:text-3xl font-bold text-sgbus-green mb-2">Your Risk Overview</h2>
       </div>
 
       {/* Metric Cards: 1-1-1 grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <MetricCard
           title="Revenue Loss"
           value={data.revenueLoss.value}
@@ -66,7 +66,7 @@ export const DashboardOverview = ({ onNavigateToListings }: DashboardOverviewPro
       </div>
 
       {/* Charts Section: 1-2 grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-2">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-1">
         <div className="col-span-1">
           <DangerChart data={data.dangerBySource} />
         </div>

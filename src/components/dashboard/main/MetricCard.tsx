@@ -46,7 +46,11 @@ export const MetricCard = ({ title, value, description, type }: MetricCardProps)
         </div>
         {/* Value and description */}
         <div className="flex flex-col gap-2">
-          <div className={cn('text-4xl sm:text-5xl md:text-6xl font-extrabold break-words', config.value)}>{value}</div>
+          <div className={cn(
+            'font-extrabold whitespace-nowrap overflow-hidden text-ellipsis', 
+            value.length > 8 ? 'text-3xl sm:text-4xl md:text-5xl' : 'text-4xl sm:text-5xl md:text-6xl',
+            config.value
+          )}>{value}</div>
           <p className="text-lg text-eerie-black font-medium mt-2">{description}</p>
         </div>
       </CardContent>

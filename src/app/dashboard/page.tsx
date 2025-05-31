@@ -178,8 +178,8 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-seasalt px-4 sm:px-8 md:px-16 lg:px-24 py-6 sm:py-8 md:py-10 lg:py-12">
-      <header className="px-0 sm:px-4 py-4">
+    <div className="h-screen overflow-hidden bg-seasalt px-4 sm:px-6 md:px-8 lg:px-12 py-4 sm:py-6 flex flex-col">
+      <header className="px-0 sm:px-4 py-2 flex-shrink-0">
         {/* Desktop Header */}
         <div className="hidden sm:flex flex-row items-center justify-between w-full">
           <div className="flex items-center">
@@ -305,9 +305,7 @@ export default function DashboardPage() {
         </div>
       </header>
 
-
-      
-      <div className="px-0 sm:px-6 py-6 sm:py-8">
+      <div className="flex-grow overflow-auto px-0 sm:px-4 py-4">
         {activeTab === 'dashboard' && <DashboardOverview onNavigateToListings={() => setActiveTab('posts')} />}
         {activeTab === 'posts' && <PostsListing />}
       </div>

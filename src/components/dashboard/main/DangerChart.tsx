@@ -40,7 +40,7 @@ const DangerChart = ({ data }: DangerChartProps) => {
           <h3 className="text-xl font-semibold text-dark-slate-gray">Danger by Source</h3>
         </div>
       </CardHeader>
-      <CardContent className="flex flex-col md:flex-row items-center justify-between gap-6 pt-2 pb-6">
+      <CardContent className="flex flex-col md:flex-row items-center justify-between gap-6 pt-2 pb-6 overflow-hidden" style={{ height: 'auto', minHeight: '324px' }}>
         {/* Legend */}
         <div className="flex flex-col gap-4 w-full max-w-xs">
           {data.map((item, index) => (
@@ -51,8 +51,8 @@ const DangerChart = ({ data }: DangerChartProps) => {
           ))}
         </div>
         {/* Donut Chart */}
-        <div className="relative flex items-center justify-center w-56 h-56">
-          <svg width={150} height={150} viewBox="0 0 150 150" className="block">
+        <div className="relative flex items-center justify-center w-40 h-40 md:w-56 md:h-56 mx-auto md:mx-0 mt-2 md:mt-0">
+          <svg width={120} height={120} viewBox="0 0 150 150" className="block md:w-[150px] md:h-[150px]">
             <circle
               cx="75"
               cy="75"
@@ -78,9 +78,9 @@ const DangerChart = ({ data }: DangerChartProps) => {
             ))}
           </svg>
           {/* Center label */}
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-full shadow-md px-6 py-3 flex flex-col items-center justify-center">
-            <span className="text-dark-slate-gray font-bold text-sm">{mainPlatform.platform}</span>
-            <span className="text-dark-slate-gray text-sm font-semibold">{mainPlatform.percentage}%</span>
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-full shadow-md px-3 py-1 md:px-6 md:py-3 flex flex-col items-center justify-center">
+            <span className="text-dark-slate-gray font-bold text-xs md:text-sm">{mainPlatform.platform}</span>
+            <span className="text-dark-slate-gray text-xs md:text-sm font-semibold">{mainPlatform.percentage}%</span>
           </div>
         </div>
       </CardContent>

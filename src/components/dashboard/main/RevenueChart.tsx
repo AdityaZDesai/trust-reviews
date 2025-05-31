@@ -22,8 +22,8 @@ export const RevenueChart = ({ data }: RevenueChartProps) => {
           <h3 className="text-xl font-semibold text-dark-slate-gray">Revenue Loss Breakdown</h3>
         </div>
       </CardHeader>
-      <CardContent className="pt-2 pb-6 flex flex-col justify-between h-full">
-        <div className="relative w-full" style={{ minHeight: 260, paddingRight: 80 }}>
+      <CardContent className="pt-2 pb-6 flex flex-col justify-between" style={{ height: '324px' }}>
+        <div className="relative w-full h-full" style={{ paddingRight: 80 }}>
           {/* Grid lines and axis labels */}
           <div className="absolute inset-0 flex flex-col justify-between z-0">
             {data.map((_, idx) => (
@@ -46,7 +46,7 @@ export const RevenueChart = ({ data }: RevenueChartProps) => {
                   {/* Value at end of bar, always inside card */}
                   <div
                     className="pl-2 flex-shrink-0 text-gray-500 text-base font-semibold"
-                    style={{ maxWidth: 72, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                    style={{ maxWidth: 120, whiteSpace: 'nowrap' }}
                   >
                     ${item.amount.toLocaleString()}
                   </div>
@@ -54,14 +54,11 @@ export const RevenueChart = ({ data }: RevenueChartProps) => {
               </div>
             ))}
           </div>
-          {/* Vertical axis grid lines and labels */}
+          {/* Vertical axis grid lines without labels */}
           <div className="absolute left-32 right-0 top-0 bottom-0 z-0 flex">
             {AXIS_STEPS.map((step) => (
               <div key={step} className="relative flex-1 h-full">
                 <div className="absolute left-0 top-0 bottom-0 border-l border-gray-200" style={{ zIndex: 0 }} />
-                <div className="absolute left-0 bottom-[-1.5rem] text-gray-400 text-base font-medium" style={{ zIndex: 1 }}>
-                  {step === 0 ? '0' : `${step / 1000}0K`}
-                </div>
               </div>
             ))}
           </div>

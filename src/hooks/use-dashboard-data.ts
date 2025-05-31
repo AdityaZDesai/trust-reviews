@@ -75,7 +75,7 @@ export function useDashboardData() {
           },
           postsTakenDown: {
             value: `${json.deletedReviewsCount}+`,
-            description: "Posts with 'deleted' status.",
+            description: "Posts Removed By Us",
             trend: "+8%",
             trendLabel: "From yesterday"
           },
