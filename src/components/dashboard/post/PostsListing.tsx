@@ -225,6 +225,7 @@ export const PostsListing = () => {
                   <SelectItem value="reddit">Reddit</SelectItem>
                   <SelectItem value="google">Google</SelectItem>
                   <SelectItem value="instagram">Instagram</SelectItem>
+                  <SelectItem value="youtube">YouTube</SelectItem>
                 </SelectContent>
               </Select>
             </div>
