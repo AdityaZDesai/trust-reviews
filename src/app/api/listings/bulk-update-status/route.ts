@@ -1,11 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
-import { ObjectId } from 'mongodb';
 import { WebClient } from '@slack/web-api';
+
+interface RequestBody {
+  ids: string[];
+  status: string;
+}
+
+interface ScrapeListingItem {
+  url: string;
+  status: string;
+  source?: string;
+}
+
+interface CompanyDocument {
+  customer_email: string;
+  scrape_listings: ScrapeListingItem[];
+}
 
 export async function POST(req: NextRequest) {
   try {
-    const { ids, status } = await req.json();
+    const { ids, status } = await req.json() as RequestBody;
     
     if (!ids || !Array.isArray(ids) || ids.length === 0 || !status) {
       return NextResponse.json({ error: 'Missing required parameters' }, { status: 400 });
@@ -20,27 +35,43 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'User not authenticated' }, { status: 401 });
     }
     
-    // Convert string IDs to ObjectIds
-    const objectIds = ids.map(id => new ObjectId(id));
+    // Find the company document
+    const company = await db.collection('Company').findOne({ customer_email: userEmail }) as CompanyDocument | null;
     
-    // Get the listings before updating to check their current status
-    const listings = await db.collection('Scrapes').find({ _id: { $in: objectIds } }).toArray();
+    if (!company || !company.scrape_listings || company.scrape_listings.length === 0) {
+      return NextResponse.json({ 
+        success: true, 
+        message: 'No company data or listings found for this user' 
+      });
+    }
     
-    // Filter for listings that are currently active
-    const activeListings = listings.filter(listing => listing.status === 'active');
-    const activeListingIds = activeListings.map(listing => listing._id);
+    // Find active listings within the company's scrape_listings that match the provided URLs
+    const activeListings = company.scrape_listings.filter((listing: ScrapeListingItem) =>
+      ids.includes(listing.url) && listing.status === 'active'
+    );
     
-    if (activeListingIds.length === 0) {
+    if (activeListings.length === 0) {
       return NextResponse.json({ 
         success: true, 
         message: 'No active listings to update' 
       });
     }
     
-    // Update the status of all active listings
-    const result = await db.collection('Scrapes').updateMany(
-      { _id: { $in: activeListingIds } },
-      { $set: { status } }
+    // Get the URLs of active listings
+    const activeListingUrls = activeListings.map((listing: ScrapeListingItem) => listing.url);
+    
+    // Update the status in the scrape_listings array within the Company collection
+    // We'll use the $[] array update operator with a filter condition
+    const result = await db.collection('Company').updateOne(
+      { customer_email: userEmail },
+      { $set: { "scrape_listings.$[elem].status": status } },
+      { 
+        arrayFilters: [{ 
+          "elem.url": { $in: activeListingUrls },
+          "elem.status": "active"
+        }],
+        upsert: false
+      }
     );
     
     // Only send Slack notification if status is changing to 'awaiting' (deletion request)
@@ -61,7 +92,7 @@ export async function POST(req: NextRequest) {
           const slack = new WebClient(botToken);
           
           // Get sources summary
-          const sourceCount = activeListings.reduce((acc, listing) => {
+          const sourceCount = activeListings.reduce((acc: Record<string, number>, listing: ScrapeListingItem) => {
             const source = listing.source || 'Unknown';
             acc[source] = (acc[source] || 0) + 1;
             return acc;
@@ -91,7 +122,7 @@ export async function POST(req: NextRequest) {
     
     return NextResponse.json({ 
       success: true, 
-      message: `Status updated to ${status} for ${result.modifiedCount} listings` 
+      message: `Status updated to ${status} for ${activeListings.length} listings` 
     });
   } catch (error) {
     console.error(error);
