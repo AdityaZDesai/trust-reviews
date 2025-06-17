@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
     
     // Update the status in the scrape_listings array within the Company collection
     // We'll use the $[] array update operator with a filter condition
-    const result = await db.collection('Company').updateOne(
+    await db.collection('Company').updateOne(
       { customer_email: userEmail },
       { $set: { "scrape_listings.$[elem].status": status } },
       { 

@@ -3,6 +3,58 @@
 import { NextRequest, NextResponse } from 'next/server'
 import clientPromise from '@/lib/mongodb'
 
+// Define interfaces for the data structures
+interface WeeklyScrape {
+  email: string;
+  yearly_revenue: string;
+  [key: string]: any; // For other properties that might exist
+}
+
+interface ScrapeListingItem {
+  url?: string;
+  source?: string;
+  status?: string;
+  timestamp?: string | Date;
+  [key: string]: any; // For other properties that might exist
+}
+
+interface CompanyDocument {
+  customer_email: string;
+  brand_name: string;
+  url: string;
+  sales_agent: string;
+  created_at: string | Date;
+  scrape_listings?: ScrapeListingItem[];
+  scrape_count?: number;
+  [key: string]: any; // For other properties that might exist
+}
+
+interface SourceCount {
+  source: string;
+  count: number;
+}
+
+interface CommissionItem {
+  source: string;
+  commission: number;
+}
+
+interface DashboardResponse {
+  companyInfo: {
+    brandName: string;
+    url: string;
+    salesAgent: string;
+    createdAt: string | Date;
+  };
+  commissionBySource: CommissionItem[];
+  totalCommission: number;
+  todayCount: number;
+  sourceCounts: SourceCount[];
+  listings: (ScrapeListingItem & { id: string })[];
+  deletedReviewsCount: number;
+  totalScrapeCount: number;
+}
+
 export async function GET(req: NextRequest) {
   try {
     const client = await clientPromise
@@ -15,23 +67,23 @@ export async function GET(req: NextRequest) {
     }
 
     // 2. Fetch annual revenue from weekly_scrapes (keeping this as requested)
-    const weekly = await db.collection('weekly_scrapes').findOne({ email })
+    const weekly = await db.collection('weekly_scrapes').findOne({ email }) as WeeklyScrape | null
     if (!weekly?.yearly_revenue) {
       return NextResponse.json({ error: 'No weekly data found for this email' }, { status: 404 })
     }
     const annualRevenue = parseFloat(weekly.yearly_revenue)
 
     // 3. Fetch company data using customer email
-    const company = await db.collection('Company').findOne({ customer_email: email })
+    const company = await db.collection('Company').findOne({ customer_email: email }) as CompanyDocument | null
     if (!company) {
       return NextResponse.json({ error: 'No company data found for this email' }, { status: 404 })
     }
     
     // 4. Use scrape_listings from company document
-    const rawScrapes = company.scrape_listings || []
+    const rawScrapes = company.scrape_listings || [] as ScrapeListingItem[]
     
     // Use URL as the ID instead of _id
-    const listings = rawScrapes.map((scrape: any) => ({
+    const listings = rawScrapes.map((scrape: ScrapeListingItem) => ({
       id: scrape.url || String(Math.random()), // Use URL as ID
       ...scrape,
     }))
@@ -46,7 +98,7 @@ export async function GET(req: NextRequest) {
       others: 0,
     }
     
-    rawScrapes.forEach(({ source }: { source?: string }) => {
+    rawScrapes.forEach(({ source }: ScrapeListingItem) => {
       const s = (source || '').toLowerCase()
       if (['reddit', 'google', 'tiktok', 'instagram', 'youtube'].includes(s)) {
         sourceCountsMap[s]++
@@ -65,7 +117,7 @@ export async function GET(req: NextRequest) {
       others: 0.02,
     }
     
-    const commissionBySource = Object.entries(sourceCountsMap).map(
+    const commissionBySource: CommissionItem[] = Object.entries(sourceCountsMap).map(
       ([source, count]) => {
         const rate = rateMap[source] ?? 0.02
         return {
@@ -86,18 +138,18 @@ export async function GET(req: NextRequest) {
     const endOfToday = new Date()
     endOfToday.setHours(23, 59, 59, 999)
     
-    const todayCount = rawScrapes.filter((scrape: any) => {
+    const todayCount = rawScrapes.filter((scrape: ScrapeListingItem) => {
       const scrapeDate = scrape.timestamp ? new Date(scrape.timestamp) : null
       return scrapeDate && scrapeDate >= startOfToday && scrapeDate <= endOfToday
     }).length
 
     // 8. Count "deleted" reviews
     const deletedReviewsCount = rawScrapes.filter(
-      (scrape: any) => scrape.status === 'deleted'
+      (scrape: ScrapeListingItem) => scrape.status === 'deleted'
     ).length
 
     // 9. Return everything with additional company info
-    return NextResponse.json({
+    const response: DashboardResponse = {
       companyInfo: {
         brandName: company.brand_name,
         url: company.url,
@@ -114,7 +166,9 @@ export async function GET(req: NextRequest) {
       listings,                    // full array of this company's scrapes
       deletedReviewsCount,         // number of reviews with status 'deleted'
       totalScrapeCount: company.scrape_count || rawScrapes.length,
-    })
+    }
+    
+    return NextResponse.json(response)
   } catch (error) {
     console.error(error)
     return NextResponse.json(
