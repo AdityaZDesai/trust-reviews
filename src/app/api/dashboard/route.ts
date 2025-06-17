@@ -7,7 +7,8 @@ import clientPromise from '@/lib/mongodb'
 interface WeeklyScrape {
   email: string;
   yearly_revenue: string;
-  [key: string]: any; // For other properties that might exist
+  // Use unknown instead of any for additional properties
+  [key: string]: string | number | boolean | object | unknown;
 }
 
 interface ScrapeListingItem {
@@ -15,7 +16,8 @@ interface ScrapeListingItem {
   source?: string;
   status?: string;
   timestamp?: string | Date;
-  [key: string]: any; // For other properties that might exist
+  // Use unknown instead of any for additional properties
+  [key: string]: string | number | boolean | Date | object | unknown | undefined;
 }
 
 interface CompanyDocument {
@@ -26,7 +28,8 @@ interface CompanyDocument {
   created_at: string | Date;
   scrape_listings?: ScrapeListingItem[];
   scrape_count?: number;
-  [key: string]: any; // For other properties that might exist
+  // Use unknown instead of any for additional properties
+  [key: string]: string | number | boolean | Date | object | ScrapeListingItem[] | unknown | undefined;
 }
 
 interface SourceCount {
